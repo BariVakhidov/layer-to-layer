@@ -1,0 +1,179 @@
+openapi: "3.0.0"
+
+info:
+  title: "OPMS api"
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:80
+
+paths:
+  /order-processing:
+    post:
+      operationId: startOrderProcessing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+      responses:
+        '202':
+          description: Accepted
+
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Order:
+      type: object
+      required:
+        - payment
+        - deliveryMethod
+        - customerInfo
+        - productIds
+      properties:
+        payment:
+          $ref: '#/components/schemas/Payment'
+        postalDelivery:
+          $ref: '#/components/schemas/PostalDelivery'
+        courierDelivery:
+          $ref: '#/components/schemas/CourierDelivery'
+        pickupDelivery:
+          $ref: '#/components/schemas/PickupDelivery'
+        deliveryMethod:
+          enum:
+            - POSTAL
+            - COURIER
+            - PICKUP
+        customerInfo:
+          $ref: '#/components/schemas/PersonInfo'
+        productIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    PostalDelivery:
+      type: object
+      required:
+        - zipCode
+      properties:
+        country:
+          type: string
+          maxLength: 100
+        city:
+          type: string
+          maxLength: 100
+        zipCode:
+          type: string
+          maxLength: 20
+
+    CourierDelivery:
+      type: object
+      required:
+        - addressInfo
+      properties:
+        addressInfo:
+          $ref: '#/components/schemas/AddressInfo'
+
+    PickupDelivery:
+      type: object
+      required:
+        - pickUpPointId
+      properties:
+        pickUpPointId:
+          type: string
+          format: uuid
+
+    PersonInfo:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - phoneNumber
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+          maxLength: 20
+
+    AddressInfo:
+      type: object
+      required:
+        - country
+        - city
+        - street
+        - homeNumber
+        - flatNumber
+      properties:
+        country:
+          type: string
+          maxLength: 100
+        city:
+          type: string
+          maxLength: 100
+        street:
+          type: string
+          maxLength: 100
+        homeNumber:
+          type: integer
+        homeAddition:
+          type: string
+          maxLength: 10
+        flatNumber:
+          type: integer
+
+    Payment:
+      required:
+        - amount
+        - paymentMethod
+      properties:
+        amount:
+          type: integer
+          format: int64
+        currency:
+          type: string
+          maxLength: 10
+        paymentMethod:
+          enum:
+            - CREDIT_CARD
+            - CASH
+        creditCard:
+          $ref: '#/components/schemas/CreditCard'
+
+    CreditCard:
+      type: object
+      properties:
+        number:
+          type: string
+          maxLength: 20
+        cardHolder:
+          type: string
+          maxLength: 50
+        dueDate:
+          type: string
+          format: date
+        cvv:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
